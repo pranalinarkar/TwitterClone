@@ -1,0 +1,255 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<title>Twitter Simulator Logs</title>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+		<script
+			  src="https://code.jquery.com/jquery-3.6.0.js"
+			  integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk="
+			  crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+		
+		<style>
+			html{
+				width: 100%;
+				height: 100%;
+				margin: 0;
+				padding: 0;
+			}
+			body{
+				width: 100%;
+				height: 100%;
+				margin: 0;
+				padding: 0;
+			}
+			div.logsContainer{
+				width:  100%;
+				height: auto;
+				margin-left:  auto;
+				margin-right:  auto;
+				padding:  48px 32px;
+				box-sizing:  border-box;
+			}
+			h1{
+				margin-bottom:  32px;
+			}
+			div.optionsContainer{
+				display: flex;
+				flex-direction: row;
+				margin-bottom: 16px;
+			}
+			div.inlineOptionsWrapper{
+				display: flex;
+				flex-direction: row;
+				margin-right: 48px;
+				align-items: center;
+			}
+			table{
+				margin-top: 32px;
+			}
+			input.searchInput{
+				width: 300px;
+			}
+			span.optionsLabel{
+				margin-right: 8px;
+			}
+			div.searchOptsDropdown{
+				margin-right:  8px;
+			}
+		</style>
+		<script>
+			$(document).ready(function(){
+				var logsEndpoint = "/api/logs?";
+				var pageNo = 1;
+				var pageSize = 10;
+				var level = "All";
+				var type = "All";
+				var username = "";
+				var message = "";
+
+				$("#entriesSelectedValue").text(pageSize);
+				$("#levelSelectedValue").text(level);
+				$("#typeSelectedValue").text(type);
+
+				loadLogs(logsEndpoint, pageNo, pageSize, username, message, level, type);
+
+				$("#usernameInput").add("#messageInput").keypress(function (event) {
+				  	if (event.which == 13)
+				  	{
+				  		username = $("#usernameInput").val();
+				  		message = $("#messageInput").val();
+
+				  		loadLogs(logsEndpoint, pageNo, pageSize, username, message, level, type);
+				  	}
+				});
+
+				$('.dropdown-menu a').click(function(){
+					var clickedId = $(this).parent().attr('id');
+					console.log(clickedId);
+					if (clickedId == "entriesDropdownMenu"){
+						pageSize = $(this).text();
+						$("#entriesSelectedValue").text(pageSize);
+					}
+					else if (clickedId == "levelDropdownMenu"){
+						level = $(this).text();
+						$("#levelSelectedValue").text(level);
+					}
+					else if (clickedId == "typeDropdownMenu"){
+						type = $(this).text();
+						$("#typeSelectedValue").text(type);
+					}
+					loadLogs(logsEndpoint, pageNo, pageSize, username, message, level, type);
+				});
+			})
+
+			function loadLogs(logsEndpoint, pageNo, pageSize, uQuery, mQuery, level, type){
+
+				if (type.includes(" "))
+				{
+					type = type.replace(" ", "");
+				}
+
+				logsEndpoint = appendParam(logsEndpoint, "pageNo", pageNo);
+				logsEndpoint = appendParam(logsEndpoint, "pageSize", pageSize);
+				logsEndpoint = appendParam(logsEndpoint, "uQuery", uQuery);
+				logsEndpoint = appendParam(logsEndpoint, "mQuery", mQuery);
+				logsEndpoint = appendParam(logsEndpoint, "level", level);
+				logsEndpoint = appendParam(logsEndpoint, "type", type);
+
+				 $.ajax({
+		            type: 'GET',
+		            url: logsEndpoint,
+		            success:function(data){
+		            	var counter = 1;
+		            	$("#logsTBody").empty();
+		            	for (var i=0; i < data.length; i++)
+	            		{
+	            			var log = data[i];
+
+	            			var trElement = document.createElement("tr")
+		            		var srElement = document.createElement("th");
+		            		var levelElement = document.createElement("td");
+		            		var typeElement = document.createElement("td");
+		            		var timeElement = document.createElement("td");
+		            		var usernameElement = document.createElement("td");
+		            		var logElement = document.createElement("td");
+
+		            		var date = new Date(log.logTime);
+
+		            		srElement.appendChild(document.createTextNode(counter++));
+		            		levelElement.appendChild(document.createTextNode(extractTypeAndLevel(log.logLevel)));
+		            		typeElement.appendChild(document.createTextNode(extractTypeAndLevel(log.logType)));
+		            		timeElement.appendChild(document.createTextNode(longToDate(log.logTime)));
+		            		usernameElement.appendChild(document.createTextNode(log.username));
+		            		logElement.appendChild(document.createTextNode(log.log));
+
+		            		trElement.appendChild(srElement);
+		            		trElement.appendChild(levelElement);
+		            		trElement.appendChild(usernameElement);
+		            		trElement.appendChild(typeElement);
+		            		trElement.appendChild(timeElement);
+		            		trElement.appendChild(logElement);
+
+		            		$("#logsTBody").append(trElement);
+	            		}
+		            }
+		        });
+			}
+
+			function appendParam(endpoint, param, value){
+				endpoint += "&" + param + "=" + value;
+				return endpoint;
+			}
+
+			function extractTypeAndLevel(data){
+				for (const [key, value] of Object.entries(data)) {
+  					if (key != "Tag" && value)
+  					{
+  						return key.substring(2, key.length);
+  					}
+				}
+			}
+
+			function longToDate(timestamp)
+			{
+				var date = new Date(timestamp);
+				var formattedDate = date.getDate() + "/" + date.getMonth() + "/" + date.getFullYear() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + ":" + date.getMilliseconds();
+				return formattedDate;
+			}
+		</script>
+	</head>
+	<body>
+		<div class="logsContainer">
+			<h1>Logs</h1>
+			<div class="optionsContainer">
+				<div class="inlineOptionsWrapper">
+					<span class="optionsLabel">Entries</span>
+					<div class="dropdown">
+						<button class="btn btn-secondary dropdown-toggle" type="button" id="entriesSelectedValue" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+							10
+						</button>
+						<div class="dropdown-menu" aria-labelledby="dropdownMenuButton" id="entriesDropdownMenu">
+							<a class="dropdown-item" href="#">10</a>
+							<a class="dropdown-item" href="#">50</a>
+							<a class="dropdown-item" href="#">100</a>
+						</div>
+					</div>
+				</div>
+				<div class="inlineOptionsWrapper">
+					<span class="optionsLabel">Level</span>
+					<div class="dropdown">
+						<button class="btn btn-secondary dropdown-toggle" type="button" id="levelSelectedValue" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+							Info
+						</button>
+						<div class="dropdown-menu" aria-labelledby="dropdownMenuButton" id="levelDropdownMenu">
+							<a class="dropdown-item" href="#">All</a>
+							<a class="dropdown-item" href="#">Info</a>
+							<a class="dropdown-item" href="#">Error</a>
+						</div>
+					</div>
+				</div>
+				<div class="inlineOptionsWrapper">
+					<span class="optionsLabel">Type</span>
+					<div class="dropdown">
+						<button class="btn btn-secondary dropdown-toggle" type="button" id="typeSelectedValue" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+							All
+						</button>
+						<div class="dropdown-menu" aria-labelledby="dropdownMenuButton" id="typeDropdownMenu">
+							<a class="dropdown-item" href="#">All</a>
+							<a class="dropdown-item" href="#">Register</a>
+							<a class="dropdown-item" href="#">Login</a>
+							<a class="dropdown-item" href="#">Tweet</a>
+							<a class="dropdown-item" href="#">Retweet</a>
+							<a class="dropdown-item" href="#">Follow</a>
+							<a class="dropdown-item" href="#">Tweet Notification</a>
+						</div>
+					</div>
+				</div>
+				<div class="inlineOptionsWrapper">
+					<span class="optionsLabel">Search User</span>
+					<input type="text" class="form-control" class="searchInput" id="usernameInput" placeholder="Enter keywords">
+				</div>
+				<div class="inlineOptionsWrapper">
+					<span class="optionsLabel">Search message</span>
+					<input type="text" class="form-control" class="searchInput" id="messageInput" placeholder="Enter keywords">
+				</div>
+			</div>
+			<table class="table table-striped table-bordered">
+				<thead class="thead-dark">
+					<tr>
+						<th scope="col">#</th>
+						<th scope="col">Level</th>
+						<th scope="col">Username</th>
+						<th scope="col">Type</th>
+						<th scope="col">Date</th>
+						<th scope="col">Message</th>
+					</tr>
+				</thead>
+				<tbody id="logsTBody">
+					
+				</tbody>
+			</table>
+		</div>
+	</body>
+</html>

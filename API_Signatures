@@ -1,0 +1,106 @@
+
+
+
+Twitter Simulator APIs
+
+1. Register
+Rquest:
+{
+    "username": "pranali",
+    "password": "pass@12345",
+}
+
+Response:
+{
+    "status": "SUCCESS | FAILED"
+    "message": "User registered successfully"
+}
+
+
+
+2. Login:
+Request:
+{
+    "username": "pranali",
+    "password": "pass@12345"
+}
+
+Response:
+{
+    "status": "SUCCESS | FAILED",
+    "message": "Login successful",
+    "tokenId": "27384614-2904-4c79-81e6-08ad5eb8b7c0"
+}
+
+
+
+3. Follow:
+Headers:
+    "tokenId": "27384614-2904-4c79-81e6-08ad5eb8b7c0"
+
+Request:
+{
+    "username": "pranali123"
+}
+
+Response:
+{
+    "status": "SUCCESS | FAILED",
+    "message": "You are now following pranali123"
+}
+
+
+
+4. Post Tweet:
+Headers:
+    "tokenId": "27384614-2904-4c79-81e6-08ad5eb8b7c0"
+
+Request:
+{
+    "tweet": "This is a demo tweet"
+}
+
+
+Response:
+{
+    "status": "SUCCESS | FAILED",
+    "message": "Tweet posted successfully"
+}
+
+
+
+5. Retweet
+Headers:
+    "tokenId": "27384614-2904-4c79-81e6-08ad5eb8b7c0"
+
+Request:
+{
+    "tweetId": "a0382a0a-5cda-11ec-bf63-0242ac130002",
+    "tweet": "check out this awesome tweet"
+}
+
+Response:
+{
+    "status": "SUCCESS | FAILED",
+    "message": "Successfully retweeted"
+}
+
+
+6. Reply
+Headers:
+    "tokenId": "27384614-2904-4c79-81e6-08ad5eb8b7c0"
+
+
+Request:
+{
+    "tweetId": "a0382a0a-5cda-11ec-bf63-0242ac130002",
+    "message": "This is awesome"
+}
+
+Response:
+{
+    "status": "SUCCESS | FAILED",
+    "message": "You have successfully replied to the tweet"
+}
+
+
